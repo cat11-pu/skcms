@@ -1908,6 +1908,26 @@ bool skcms_PrimariesToXYZD50(float rx, float ry,
     return true;
 }
 
+bool skcms_XYZD50_to_linear(const skcms_ICCProfile* profile,
+                            const float xyz[3],
+                            float rgb[3]) {
+    if (!profile || !profile->has_toXYZD50 || !xyz || !rgb) {
+        return false;
+    }
+
+    skcms_Matrix3x3 fromXYZD50;
+    if (!skcms_Matrix3x3_invert(&profile->toXYZD50, &fromXYZD50)) {
+        return false;
+    }
+
+    skcms_Vector3 v = {{ xyz[0], xyz[1], xyz[2] }};
+    v = mv_mul(&fromXYZD50, &v);
+    rgb[0] = v.vals[0];
+    rgb[1] = v.vals[1];
+    rgb[2] = v.vals[2];
+    return true;
+}
+
 
 bool skcms_Matrix3x3_invert(const skcms_Matrix3x3* src, skcms_Matrix3x3* dst) {
     double a00 = src->vals[0][0],

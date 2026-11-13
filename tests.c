@@ -1396,6 +1396,89 @@ static void test_PrimariesToXYZ(void) {
         }
 }
 
+static void test_XYZD50_to_linear(void) {
+    const skcms_ICCProfile* srgb = skcms_sRGB_profile();
+    float rgb[3];
+
+    // The XYZD50 profile's gamut matrix is the identity, so XYZ passes through.
+    expect(skcms_XYZD50_to_linear(skcms_XYZD50_profile(),
+                                  (float[]){0.25f, 0.5f, 0.75f}, rgb));
+    expect(fabsf_(rgb[0] - 0.25f) < 1e-6f &&
+           fabsf_(rgb[1] - 0.50f) < 1e-6f &&
+           fabsf_(rgb[2] - 0.75f) < 1e-6f);
+
+    // White point: the profile's white (column sums of toXYZD50) maps to (1,1,1).
+    float white[3];
+    for (int r = 0; r < 3; ++r) {
+        white[r] = srgb->toXYZD50.vals[r][0]
+                 + srgb->toXYZD50.vals[r][1]
+                 + srgb->toXYZD50.vals[r][2];
+    }
+    expect(skcms_XYZD50_to_linear(srgb, white, rgb));
+    expect(fabsf_(rgb[0] - 1.0f) < 1e-5f &&
+           fabsf_(rgb[1] - 1.0f) < 1e-5f &&
+           fabsf_(rgb[2] - 1.0f) < 1e-5f);
+
+    // Each column of toXYZD50 is a primary; it must map back to a unit vector.
+    for (int c = 0; c < 3; ++c) {
+        float xyz[3] = { srgb->toXYZD50.vals[0][c],
+                         srgb->toXYZD50.vals[1][c],
+                         srgb->toXYZD50.vals[2][c] };
+        expect(skcms_XYZD50_to_linear(srgb, xyz, rgb));
+        for (int k = 0; k < 3; ++k) {
+            expect(fabsf_(rgb[k] - (k == c ? 1.0f : 0.0f)) < 1e-5f);
+        }
+    }
+
+    // Negative and out-of-range inputs are not clamped, and round-trip exactly.
+    const float extended[][3] = {
+        { -0.25f,  0.5f, 1.5f },
+        {  2.00f,  2.0f, 2.0f },
+        { -1.00f, -1.0f, -1.0f },
+    };
+    for (int t = 0; t < 3; ++t) {
+        expect(skcms_XYZD50_to_linear(srgb, extended[t], rgb));
+        for (int r = 0; r < 3; ++r) {
+            float back = srgb->toXYZD50.vals[r][0] * rgb[0]
+                       + srgb->toXYZD50.vals[r][1] * rgb[1]
+                       + srgb->toXYZD50.vals[r][2] * rgb[2];
+            expect(fabsf_(back - extended[t][r]) < 1e-5f);
+        }
+    }
+    expect(skcms_XYZD50_to_linear(srgb, (float[]){2.0f, 2.0f, 2.0f}, rgb));
+    expect(rgb[0] > 1.0f && rgb[1] > 1.0f && rgb[2] > 1.0f);
+    expect(skcms_XYZD50_to_linear(srgb, (float[]){-1.0f, -1.0f, -1.0f}, rgb));
+    expect(rgb[0] < 0.0f && rgb[1] < 0.0f && rgb[2] < 0.0f);
+
+    // Round-trip precision over an extended-range grid, negatives included.
+    float max_err = 0.0f;
+    for (int i = 0; i <= 16; ++i)
+        for (int j = 0; j <= 16; ++j)
+            for (int k = 0; k <= 16; ++k) {
+                float xyz[3] = { -0.5f + 2.0f * i / 16,
+                                 -0.5f + 2.0f * j / 16,
+                                 -0.5f + 2.0f * k / 16 };
+                expect(skcms_XYZD50_to_linear(srgb, xyz, rgb));
+                for (int r = 0; r < 3; ++r) {
+                    float back = srgb->toXYZD50.vals[r][0] * rgb[0]
+                               + srgb->toXYZD50.vals[r][1] * rgb[1]
+                               + srgb->toXYZD50.vals[r][2] * rgb[2];
+                    float err = fabsf_(back - xyz[r]);
+                    if (err > max_err) { max_err = err; }
+                }
+            }
+    expect(max_err < 1e-5f);
+
+    // Profiles without a usable toXYZD50 matrix are rejected.
+    skcms_ICCProfile no_matrix = *srgb;
+    no_matrix.has_toXYZD50 = false;
+    expect(!skcms_XYZD50_to_linear(&no_matrix, (float[]){0,0,0}, rgb));
+
+    skcms_ICCProfile singular = *srgb;
+    memset(&singular.toXYZD50, 0, sizeof(singular.toXYZD50));
+    expect(!skcms_XYZD50_to_linear(&singular, (float[]){0,0,0}, rgb));
+}
+
 static void test_Programmatic_sRGB(void) {
     skcms_Matrix3x3 srgb_to_xyz;
     expect(skcms_PrimariesToXYZD50(0.64f, 0.33f,
@@ -2221,6 +2304,7 @@ int main(int argc, char** argv) {
     test_MakeUsableAsDestinationAdobe();
     test_AdaptToD50();
     test_PrimariesToXYZ();
+    test_XYZD50_to_linear();
     test_Programmatic_sRGB();
     test_EqualityCheck();
     test_ExactlyEqual();

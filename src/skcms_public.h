@@ -440,6 +440,15 @@ SKCMS_API bool skcms_PrimariesToXYZD50(float rx, float ry,
                                        float wx, float wy,
                                        skcms_Matrix3x3* toXYZD50);
 
+// Converts a D50-relative XYZ tristimulus value to linear-light RGB in the gamut
+// described by the profile's toXYZD50 matrix.  Neither the input nor the result
+// is clamped: negative or greater-than-one XYZ inputs, and RGB outputs outside
+// [0,1], are preserved as-is (extended linear-light range).  Returns false if
+// the profile has no toXYZD50 matrix or that matrix is not invertible.
+SKCMS_API bool skcms_XYZD50_to_linear(const skcms_ICCProfile* profile,
+                                      const float xyz[3],
+                                      float rgb[3]);
+
 // Call before your first call to skcms_Transform() to skip runtime CPU detection.
 SKCMS_API void skcms_DisableRuntimeCPUDetection(void);
 
