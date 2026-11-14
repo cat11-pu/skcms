@@ -42,9 +42,12 @@ Mtrx : | 1. 0. 0. 0. |
        | 0. 1. 0. 0. |
        | 0. 0. 1. 0. |
  "M" : 3 inputs
-  M0 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  M1 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  M2 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
+  M0 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  M1 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  M2 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
 CLUT : 17 x 17 x 17 (16 bpp)
  "A" : 3 outputs
   A0 : 16-bit table with 256 entries

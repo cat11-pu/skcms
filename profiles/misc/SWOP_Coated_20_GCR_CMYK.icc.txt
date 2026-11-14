@@ -30,9 +30,12 @@
   ~= : 1.388345, 1, -8.363277e-07, 0.6634241, 0.01568628, 0.007305145, 0 (Max error: 0.0358348) (D-gap: 2.25063e-05) (f(1) = 1.00732)
 CLUT : 16 x 16 x 16 x 16 (16 bpp)
  "B" : 3 outputs
-  B0 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  B1 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  B2 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
+  B0 : 16-bit table with 2 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  B1 : 16-bit table with 2 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  B2 : 16-bit table with 2 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
  B2A : "B", CLUT, "A"
  "B" : 3 inputs
   B0 : 16-bit table with 258 entries

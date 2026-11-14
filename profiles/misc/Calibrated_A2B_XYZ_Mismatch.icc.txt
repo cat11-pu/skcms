@@ -68,9 +68,12 @@ CLUT : 33 x 33 x 33 (16 bpp)
   ~= : 0.4561385, 1.002129, -0.0001238048, 58.11169, 0.0002442003, -0.002128601, 0 (Max error: 0.00579393) (D-gap: 1.27777e-05) (f(1) = 0.998779)
 CLUT : 33 x 33 x 33 (16 bpp)
  "A" : 3 outputs
-  A0 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  A1 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  A2 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
+  A0 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  A1 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  A2 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
 WTPT : | 0.95072937 1. 1.0914154 |
 252 random bytes transformed to 84 linear XYZD50 pixels:
      0.08  0.16  0.11     0.30  0.41  0.07     0.14  0.20  0.05     0.06  0.03  0.09

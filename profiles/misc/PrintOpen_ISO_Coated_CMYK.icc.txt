@@ -22,15 +22,22 @@
 
  A2B : "A", CLUT, "B"
  "A" : 4 inputs
-  A0 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  A1 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  A2 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  A3 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
+  A0 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  A1 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  A2 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  A3 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
 CLUT : 16 x 16 x 16 x 16 (16 bpp)
  "B" : 3 outputs
-  B0 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  B1 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  B2 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
+  B0 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  B1 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  B2 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
  B2A : "B", CLUT, "A"
  "B" : 3 inputs
   B0 : 16-bit table with 256 entries
@@ -41,10 +48,14 @@ CLUT : 16 x 16 x 16 x 16 (16 bpp)
   ~= : 0.9544073, 1, 0.07057476, 0, 0, -0.0793457, 0 (Max error: 0.148669) (f(1) = 0.987762)
 CLUT : 33 x 33 x 33 (16 bpp)
  "A" : 4 outputs
-  A0 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  A1 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  A2 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
-  A3 : 1, 1, 0, 0, 0, 0, 0 (f(1) = 1) (~Identity)
+  A0 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  A1 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  A2 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
+  A3 : 16-bit table with 256 entries
+  ~= : 1, 1, 0, 0, 0, 0, 0 (Max error: 0.000124693) (f(1) = 1) (~Identity)
 WTPT : | 0.84552 0.87683105 0.74716186 |
 252 random bytes transformed to 63 linear XYZD50 pixels:
      0.09  0.14  0.16     0.23  0.14  0.06     0.04  0.04  0.02     0.11  0.08  0.11

@@ -2272,6 +2272,39 @@ static void test_B2A(void) {
     free(ptr);
 }
 
+// Regression test: an identity 1D LUT inside an A2B/B2A pipeline must stay a
+// table after parsing.  Parsing used to rewrite it as a parametric identity
+// curve, which changed the pipeline for profiles that mix parametric curves
+// and LUTs and shifted dark colors by many quantization levels.
+static void test_B2A_identity_table_preserved(void) {
+    void*  ptr;
+    size_t len;
+    expect(load_file("profiles/fuzz/b2a_no_clut.icc", &ptr, &len));
+
+    skcms_ICCProfile profile;
+    expect(skcms_Parse(ptr, len, &profile));
+    expect(profile.has_B2A);
+
+    // B2A input curve 1 is a 2-entry [0, 65535] identity table; it must remain
+    // a table rather than being canonicalized to a parametric identity curve.
+    expect(profile.B2A.input_curves[1].table_entries == 2);
+    expect(profile.B2A.input_curves[1].table_16 != NULL);
+
+    // A dark pixel must transform deterministically and stay in a sane range
+    // instead of being driven to the large values the old rewrite produced.
+    float src[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    float dst[4];
+    expect(skcms_Transform(src, skcms_PixelFormat_RGBA_ffff,
+                           skcms_AlphaFormat_Opaque, &profile,
+                           dst, skcms_PixelFormat_RGBA_ffff,
+                           skcms_AlphaFormat_Opaque, skcms_sRGB_profile(), 1));
+    for (int i = 0; i < 3; i++) {
+        expect(dst[i] == dst[i] && dst[i] - dst[i] == 0.0f);
+    }
+
+    free(ptr);
+}
+
 int main(int argc, char** argv) {
     bool regenTestData = false;
     for (int i = 1; i < argc; ++i) {
@@ -2326,6 +2359,7 @@ int main(int argc, char** argv) {
     test_RGBA_8888_sRGB();
     test_ParseWithA2BPriority();
     test_B2A();
+    test_B2A_identity_table_preserved();
 
     test_Parse(regenTestData);
     test_sRGB_AllBytes();

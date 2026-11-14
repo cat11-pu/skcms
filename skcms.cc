@@ -1236,71 +1236,18 @@ static int fit_linear(const skcms_Curve* curve, int N, float tol,
     return lin_points;
 }
 
-// If this skcms_Curve holds an identity table, rewrite it as an identity skcms_TransferFunction.
-static void canonicalize_identity(skcms_Curve* curve) {
-    if (curve->table_entries && curve->table_entries <= (uint32_t)INT_MAX) {
-        int N = (int)curve->table_entries;
-
-        float c = 0.0f, d = 0.0f, f = 0.0f;
-        if (N == fit_linear(curve, N, 1.0f/static_cast<float>(2*N), &c,&d,&f)
-            && c == 1.0f
-            && f == 0.0f) {
-            curve->table_entries = 0;
-            curve->table_8       = nullptr;
-            curve->table_16      = nullptr;
-            curve->parametric    = skcms_TransferFunction{1,1,0,0,0,0,0};
-        }
-    }
-}
-
 static bool read_a2b(const skcms_ICCTag* tag, skcms_A2B* a2b, bool pcs_is_xyz) {
-    bool ok = false;
-    if (tag->type == skcms_Signature_mft1) { ok = read_tag_mft1(tag, a2b); }
-    if (tag->type == skcms_Signature_mft2) { ok = read_tag_mft2(tag, a2b); }
-    if (tag->type == skcms_Signature_mAB ) { ok = read_tag_mab(tag, a2b, pcs_is_xyz); }
-    if (!ok) {
-        return false;
-    }
-
-    if (a2b->input_channels > 0) { canonicalize_identity(a2b->input_curves + 0); }
-    if (a2b->input_channels > 1) { canonicalize_identity(a2b->input_curves + 1); }
-    if (a2b->input_channels > 2) { canonicalize_identity(a2b->input_curves + 2); }
-    if (a2b->input_channels > 3) { canonicalize_identity(a2b->input_curves + 3); }
-
-    if (a2b->matrix_channels > 0) { canonicalize_identity(a2b->matrix_curves + 0); }
-    if (a2b->matrix_channels > 1) { canonicalize_identity(a2b->matrix_curves + 1); }
-    if (a2b->matrix_channels > 2) { canonicalize_identity(a2b->matrix_curves + 2); }
-
-    if (a2b->output_channels > 0) { canonicalize_identity(a2b->output_curves + 0); }
-    if (a2b->output_channels > 1) { canonicalize_identity(a2b->output_curves + 1); }
-    if (a2b->output_channels > 2) { canonicalize_identity(a2b->output_curves + 2); }
-
-    return true;
+    if (tag->type == skcms_Signature_mft1) { return read_tag_mft1(tag, a2b); }
+    if (tag->type == skcms_Signature_mft2) { return read_tag_mft2(tag, a2b); }
+    if (tag->type == skcms_Signature_mAB ) { return read_tag_mab(tag, a2b, pcs_is_xyz); }
+    return false;
 }
 
 static bool read_b2a(const skcms_ICCTag* tag, skcms_B2A* b2a, bool pcs_is_xyz) {
-    bool ok = false;
-    if (tag->type == skcms_Signature_mft1) { ok = read_tag_mft1(tag, b2a); }
-    if (tag->type == skcms_Signature_mft2) { ok = read_tag_mft2(tag, b2a); }
-    if (tag->type == skcms_Signature_mBA ) { ok = read_tag_mba(tag, b2a, pcs_is_xyz); }
-    if (!ok) {
-        return false;
-    }
-
-    if (b2a->input_channels > 0) { canonicalize_identity(b2a->input_curves + 0); }
-    if (b2a->input_channels > 1) { canonicalize_identity(b2a->input_curves + 1); }
-    if (b2a->input_channels > 2) { canonicalize_identity(b2a->input_curves + 2); }
-
-    if (b2a->matrix_channels > 0) { canonicalize_identity(b2a->matrix_curves + 0); }
-    if (b2a->matrix_channels > 1) { canonicalize_identity(b2a->matrix_curves + 1); }
-    if (b2a->matrix_channels > 2) { canonicalize_identity(b2a->matrix_curves + 2); }
-
-    if (b2a->output_channels > 0) { canonicalize_identity(b2a->output_curves + 0); }
-    if (b2a->output_channels > 1) { canonicalize_identity(b2a->output_curves + 1); }
-    if (b2a->output_channels > 2) { canonicalize_identity(b2a->output_curves + 2); }
-    if (b2a->output_channels > 3) { canonicalize_identity(b2a->output_curves + 3); }
-
-    return true;
+    if (tag->type == skcms_Signature_mft1) { return read_tag_mft1(tag, b2a); }
+    if (tag->type == skcms_Signature_mft2) { return read_tag_mft2(tag, b2a); }
+    if (tag->type == skcms_Signature_mBA ) { return read_tag_mba(tag, b2a, pcs_is_xyz); }
+    return false;
 }
 
 typedef struct {
