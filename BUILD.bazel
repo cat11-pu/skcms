@@ -178,7 +178,11 @@ cc_library(
 cc_test(
     name = "tests",
     size = "small",
-    srcs = ["tests.c"],
+    srcs = [
+        "property_tests.c",
+        "property_tests.h",
+        "tests.c",
+    ],
     data = glob(["profiles/**"]),
     deps = [
         ":skcms",

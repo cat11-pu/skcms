@@ -13,6 +13,7 @@
 #include "src/skcms_public.h"
 #include "src/skcms_internals.h"
 #include "test_only.h"
+#include "property_tests.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -2242,6 +2243,7 @@ int main(int argc, char** argv) {
     test_RGBA_8888_sRGB();
     test_ParseWithA2BPriority();
     test_B2A();
+    skcms_RunRandomPropertyTests();
 
     test_Parse(regenTestData);
     test_sRGB_AllBytes();

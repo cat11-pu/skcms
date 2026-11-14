@@ -6,12 +6,14 @@ build $out/src/skcms_TransformSkx.o:      compile_cc_skx src/skcms_TransformSkx.
 
 build $out/test_only.o: compile_c test_only.c
 
-build $out/tests.o:   compile_c tests.c
+build $out/property_tests.o: compile_c property_tests.c
+build $out/tests.o:          compile_c tests.c
 build $out/tests$exe: link $out/skcms.o $
                            $out/src/skcms_TransformBaseline.o $
                            $out/src/skcms_TransformHsw.o $
                            $out/src/skcms_TransformSkx.o $
                            $out/tests.o $
+                           $out/property_tests.o $
                            $out/test_only.o
 build $out/tests.ok:  run  $out/tests$exe
 
