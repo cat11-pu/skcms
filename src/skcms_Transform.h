@@ -60,6 +60,7 @@ namespace skcms_private {
     M(tf_b)               \
     M(tf_a)               \
     M(tf_rgb)             \
+    M(tf_lut_rgb)         \
                           \
     M(pq_r)               \
     M(pq_g)               \

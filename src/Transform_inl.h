@@ -1202,6 +1202,22 @@ STAGE(tf_rgb, const skcms_TransferFunction* tf) {
     b = apply_tf(tf, b);
 }
 
+// Evaluate three per-channel curves via exact 256-entry lookup tables,
+// laid out as {r[0..255], g[0..255], b[0..255]}.
+//
+// This stage is only emitted when r,g,b are known to each be exactly
+// i*(1/255.0f) for some byte i (e.g. right after loading an 8-bit-per-channel
+// format, before any op that modifies r,g,b), so to_fixed(x*255) recovers i
+// exactly and the gather is bit-identical to evaluating the curve ops directly.
+STAGE(tf_lut_rgb, const float* lut) {
+    I32 ri = cast<I32>(to_fixed(r * 255.0f)),
+        gi = cast<I32>(to_fixed(g * 255.0f)),
+        bi = cast<I32>(to_fixed(b * 255.0f));
+    r = bit_pun<F>(gather_32((const uint8_t*)(lut +   0), ri));
+    g = bit_pun<F>(gather_32((const uint8_t*)(lut + 256), gi));
+    b = bit_pun<F>(gather_32((const uint8_t*)(lut + 512), bi));
+}
+
 STAGE(pq_r, const skcms_TransferFunction* tf) { r = apply_pq(tf, r); }
 STAGE(pq_g, const skcms_TransferFunction* tf) { g = apply_pq(tf, g); }
 STAGE(pq_b, const skcms_TransferFunction* tf) { b = apply_pq(tf, b); }

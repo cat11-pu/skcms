@@ -2573,6 +2573,49 @@ static int select_curve_ops(const skcms_Curve* curves, int numChannels, OpAndArg
     return cursor;
 }
 
+// When the source pixels are 8-bit per channel, the load stage produces
+// exactly i*(1/255.0f) for some byte i on each of r,g,b.  Any per-channel
+// curve ops then map those 256 inputs to 256 outputs, so we can evaluate the
+// ops once into a lookup table and replace the per-pixel curve math with a
+// gather.  The table is built by running the very ops we'd otherwise emit
+// (via the baseline backend), so results are bit-identical to direct
+// evaluation on every backend.
+static bool build_exact_curve_lut(const skcms_Curve* curves, int numChannels,
+                                  float lut[3][256]) {
+    if (numChannels != 3) {
+        return false;
+    }
+
+    OpAndArg oa[4];
+    const int numOps = select_curve_ops(curves, numChannels, oa);
+    if (numOps == 0) {
+        return false;  // Identity curves: no ops needed at all.
+    }
+
+    Op          prog[6];
+    const void* ctx[6];
+    int         n = 0;
+    prog[n] = Op::load_fff;  ctx[n++] = nullptr;
+    for (int i = 0; i < numOps; i++) {
+        prog[n] = oa[i].op;  ctx[n++] = oa[i].arg;
+    }
+    prog[n] = Op::store_fff; ctx[n++] = nullptr;
+
+    float ramp[256*3],
+          tmp [256*3];
+    for (int i = 0; i < 256; i++) {
+        ramp[3*i+0] = ramp[3*i+1] = ramp[3*i+2] = (float)i * (1/255.0f);
+    }
+    baseline::run_program(prog, ctx, n, (const char*)ramp, (char*)tmp, 256,
+                          3*sizeof(float), 3*sizeof(float));
+    for (int i = 0; i < 256; i++) {  // Deinterleave to {r[256], g[256], b[256]}.
+        lut[0][i] = tmp[3*i+0];
+        lut[1][i] = tmp[3*i+1];
+        lut[2][i] = tmp[3*i+2];
+    }
+    return true;
+}
+
 static size_t bytes_per_pixel(skcms_PixelFormat fmt) {
     switch (fmt >> 1) {   // ignore rgb/bgr
         case skcms_PixelFormat_A_8              >> 1: return  1;
@@ -2767,6 +2810,23 @@ bool skcms_Transform(const void*             src,
     // This will store the full source to destination gamut conversion matrix, if it is needed.
     skcms_Matrix3x3        dst_from_src;
 
+    // Exact per-channel curve lookup tables for 8-bit-per-channel sources,
+    // see build_exact_curve_lut().  Filled on first use; referenced by context.
+    float src_curve_lut[3][256];
+
+    // Formats whose load stage leaves r,g,b each exactly i*(1/255.0f) for a
+    // byte i, making the source curve ops exact-LUT-able.  (BGR variants map
+    // to the same cases after >> 1; swap_rb only permutes the channels.)
+    bool src_8bit = false;
+    switch (srcFmt >> 1) {
+        case skcms_PixelFormat_RGB_888   >> 1:
+        case skcms_PixelFormat_RGBA_8888 >> 1:
+            src_8bit = true;
+            break;
+        default:
+            break;
+    }
+
     switch (srcFmt >> 1) {
         default: return false;
         case skcms_PixelFormat_A_8              >> 1: add_op(Op::load_a8);          break;
@@ -2792,7 +2852,20 @@ bool skcms_Transform(const void*             src,
 
         case skcms_PixelFormat_RGBA_8888_sRGB >> 1:
             add_op(Op::load_8888);
-            add_op_ctx(Op::tf_rgb, skcms_sRGB_TransferFunction());
+            {
+                // The sRGB decode curve is applied to byte-domain values, so
+                // an exact LUT is possible here too.
+                skcms_Curve srgb_curves[3];
+                for (int i = 0; i < 3; i++) {
+                    srgb_curves[i].table_entries = 0;
+                    srgb_curves[i].parametric    = *skcms_sRGB_TransferFunction();
+                }
+                if (build_exact_curve_lut(srgb_curves, 3, src_curve_lut)) {
+                    add_op_ctx(Op::tf_lut_rgb, src_curve_lut);
+                } else {
+                    add_op_ctx(Op::tf_rgb, skcms_sRGB_TransferFunction());
+                }
+            }
             break;
     }
     if (srcFmt == skcms_PixelFormat_RGB_hhh_Norm ||
@@ -2887,7 +2960,18 @@ bool skcms_Transform(const void*             src,
             }
 
         } else if (srcProfile->has_trc && srcProfile->has_toXYZD50) {
-            add_curve_ops(srcProfile->trc, /*numChannels=*/3);
+            // With an 8-bit-per-channel source and nothing between load and
+            // here that modifies r,g,b (no unpremul, no CMYK invert), the
+            // curve ops see only 256 distinct values per channel and can be
+            // replaced by an exact lookup table.
+            if (src_8bit
+                && srcAlpha != skcms_AlphaFormat_PremulAsEncoded
+                && srcProfile->data_color_space != skcms_Signature_CMYK
+                && build_exact_curve_lut(srcProfile->trc, 3, src_curve_lut)) {
+                add_op_ctx(Op::tf_lut_rgb, src_curve_lut);
+            } else {
+                add_curve_ops(srcProfile->trc, /*numChannels=*/3);
+            }
         } else {
             return false;
         }
